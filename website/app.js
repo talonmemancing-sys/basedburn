@@ -22,7 +22,13 @@ export const CONFIG = {
   CHAIN_ID: 8453,
   CHAIN_HEX: '0x2105',
   CHAIN_NAME: 'Base',
-  RPC_URL: 'https://mainnet.base.org',
+  // mainnet.base.org 默认严重限流，换公共节点。前端有 fallback 列表
+  RPC_URL: 'https://base-rpc.publicnode.com',
+  RPC_FALLBACKS: [
+    'https://base.drpc.org',
+    'https://mainnet.base.org',
+    'https://base.gateway.tenderly.co',
+  ],
   EXPLORER: 'https://basescan.org',
 
   // Base mainnet deployed 2026-05-20
@@ -75,8 +81,14 @@ const BURN_HOOK_ABI = ['function flush()'];
 // ╭─────────────────────────────────────────────────────────────────────────╮
 // │ 3. State                                                                 │
 // ╰─────────────────────────────────────────────────────────────────────────╯
+// 用一个 provider，失败时自动切到 fallback
+function makeReadProvider(url) {
+  return new JsonRpcProvider(url, undefined, { staticNetwork: true });
+}
+
 const state = {
-  readProvider: new JsonRpcProvider(CONFIG.RPC_URL),
+  readProvider: makeReadProvider(CONFIG.RPC_URL),
+  rpcIndex: 0,
   writeProvider: null, // BrowserProvider after wallet connect
   signer: null,
   account: null,
@@ -207,6 +219,14 @@ export function disconnectWallet() {
 function getReadGame()  { return new Contract(CONFIG.BURN_GAME,  BURN_GAME_ABI,  state.readProvider); }
 function getReadToken() { return new Contract(CONFIG.BURN_TOKEN, BURN_TOKEN_ABI, state.readProvider); }
 
+function rotateRpc() {
+  const all = [CONFIG.RPC_URL, ...(CONFIG.RPC_FALLBACKS || [])];
+  state.rpcIndex = (state.rpcIndex + 1) % all.length;
+  const next = all[state.rpcIndex];
+  console.warn('RPC rotation → ' + next);
+  state.readProvider = makeReadProvider(next);
+}
+
 async function pullPublicReads() {
   if (!isConfigured()) return;
   try {
@@ -226,7 +246,8 @@ async function pullPublicReads() {
     state.totalDead = dead;
     state.blockNumber = bn;
   } catch (e) {
-    console.warn('public reads failed:', e);
+    console.warn('public reads failed:', e?.message || e);
+    rotateRpc();
   }
 }
 
@@ -243,7 +264,8 @@ async function pullUserReads() {
     state.userAllowance = allw;
     state.userPending = pend;
   } catch (e) {
-    console.warn('user reads failed:', e);
+    console.warn('user reads failed:', e?.message || e);
+    rotateRpc();
   }
 }
 
