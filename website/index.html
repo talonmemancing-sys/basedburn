@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BURN · last burner takes all · Base</title>
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="apple-touch-icon" href="assets/logo.png">
+<meta property="og:title" content="BURN · last burner takes all">
+<meta property="og:description" content="A Uniswap V4 last-burner-wins game on Base. Burn 0.05% of supply, reset the timer, win the pot.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@BasedBurnfi">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #0000FF;
+  --blue-2: #2424ff;
+  --blue-3: #5a5aff;
+  --blue-bg: #0a0a4a;
+  --ink: #000000;
+  --ash: #08080F;
+  --smoke: #14141F;
+  --line: rgba(255,255,255,0.10);
+  --line-strong: rgba(255,255,255,0.22);
+  --paper: #F4F4EE;
+  --bone: #E8E8DE;
+  --line-dark: rgba(0,0,0,0.10);
+  --line-dark-strong: rgba(0,0,0,0.25);
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { background: var(--ink); }
+body {
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--sans);
+  font-feature-settings: "ss01", "tnum";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+a { color: inherit; }
+button { font: inherit; }
+
+/* ============== NAV ============== */
+nav.top {
+  position: sticky; top: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 28px;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-logo {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08);
+}
+.brand-name { font-family: var(--sans); font-weight: 700; font-size: 17px; letter-spacing: -0.02em; }
+.brand-on {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 8px; border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.brand-on::before { content: ""; width: 7px; height: 7px; background: var(--blue); border-radius: 1px; }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a { color: rgba(255,255,255,0.65); text-decoration: none; transition: color .15s; }
+.nav-links a:hover { color: #fff; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-block {
+  font-family: var(--mono); font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-block::before { content: ""; width: 6px; height: 6px; background: #22ff77; border-radius: 50%; }
+.nav-cta {
+  background: #fff; color: #000;
+  padding: 9px 16px; border-radius: 6px;
+  font-weight: 600; text-decoration: none;
+  font-family: var(--sans); font-size: 13px;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform .12s;
+}
+.nav-cta:hover { transform: translateY(-1px); }
+
+/* ============== HERO ============== */
+.hero {
+  position: relative;
+  padding: 56px 28px 64px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: url('assets/base-texture.png') center/cover;
+  opacity: 0.55;
+  filter: contrast(1.15) saturate(1.25) hue-rotate(-4deg);
+  mix-blend-mode: normal;
+}
+.hero-flames {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: screen;
+  opacity: 0.95;
+}
+.hero-iris {
+  position: absolute; inset: -10%;
+  background:
+    radial-gradient(60% 80% at 12% 95%, rgba(0,229,255,0.35) 0%, transparent 55%),
+    radial-gradient(55% 70% at 88% 95%, rgba(140,90,255,0.32) 0%, transparent 55%),
+    radial-gradient(55% 50% at 50% 0%, rgba(0,229,255,0.18) 0%, transparent 60%),
+    conic-gradient(from 200deg at 50% 110%, rgba(0,229,255,0.0) 0deg, rgba(60,80,255,0.22) 70deg, rgba(0,0,255,0.28) 120deg, rgba(0,229,255,0.22) 170deg, rgba(178,90,255,0.20) 220deg, rgba(0,0,0,0) 290deg);
+  filter: blur(36px) saturate(1.3);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
+  animation: irisDrift 22s ease-in-out infinite alternate;
+}
+@keyframes irisDrift {
+  0%   { transform: translate3d(0,0,0) scale(1); filter: blur(36px) saturate(1.3) hue-rotate(0deg); }
+  50%  { transform: translate3d(-1.5%, 1%, 0) scale(1.04); filter: blur(40px) saturate(1.45) hue-rotate(8deg); }
+  100% { transform: translate3d(1.5%, -0.5%, 0) scale(1.02); filter: blur(38px) saturate(1.35) hue-rotate(-6deg); }
+}
+.hero-veil {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, rgba(0,0,0,0.35) 65%, rgba(0,0,0,0.85) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.35) 0%, transparent 30%, transparent 70%, var(--ink) 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+.hero-inner { position: relative; z-index: 3; max-width: 1340px; margin: 0 auto; }
+
+.hero-meta {
+  display: flex; align-items: center; gap: 18px;
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  opacity: 0.85;
+  flex-wrap: wrap;
+}
+.hero-meta .chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+}
+.live-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; animation: livePulse 1.2s ease-in-out infinite; }
+@keyframes livePulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.85); } }
+.hero-meta .pool-id { opacity: 0.55; }
+
+.timer-block { text-align: center; padding: 36px 0 24px; }
+.timer-label {
+  font-family: var(--mono);
+  font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 14px;
+}
+.timer-clock {
+  font-family: var(--mono);
+  font-size: clamp(96px, 17.5vw, 232px);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #e8ecff 40%, #c8d0ff 70%, #a0b0ff 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 24px rgba(60,90,255,0.30)) drop-shadow(0 0 60px rgba(120,90,255,0.18));
+}
+.timer-clock .colon { color: rgba(255,255,255,0.4); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0.25; } }
+.timer-bar {
+  margin: 20px auto 0;
+  height: 3px; max-width: 760px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 2px; overflow: hidden;
+  position: relative;
+}
+.timer-bar-fill {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  width: 97%;
+  background: #fff;
+  box-shadow: 0 0 16px rgba(255,255,255,0.6);
+}
+.timer-sub {
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  opacity: 0.62;
+}
+
+/* hero stats row */
+.hero-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  margin: 36px 0 28px;
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+}
+.hero-stat {
+  padding: 22px 26px;
+  border-right: 1px solid var(--line-strong);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.hero-stat:last-child { border-right: none; }
+.hero-stat .lbl {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; opacity: 0.55;
+}
+.hero-stat .val {
+  font-family: var(--mono); font-size: 30px; font-weight: 500;
+  letter-spacing: -0.025em; line-height: 1;
+}
+.hero-stat .val .unit { font-size: 18px; opacity: 0.6; margin-left: 4px; }
+.hero-stat .sub { font-family: var(--mono); font-size: 12px; opacity: 0.6; display: flex; align-items: center; gap: 8px; }
+.hero-stat .delta-up { color: #62ff95; }
+.hero-stat .addr-leader {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.hero-stat .addr-leader .crown { color: #fff; }
+
+/* hero CTA */
+.cta-row {
+  display: grid; grid-template-columns: 1fr 340px;
+  gap: 14px;
+  margin-top: 28px;
+}
+.burn-btn {
+  position: relative;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  padding: 28px 32px;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--sans);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background .15s, transform .12s;
+  overflow: hidden;
+}
+.burn-btn::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at top left, rgba(255,255,255,0.25), transparent 60%);
+  pointer-events: none;
+}
+.burn-btn:hover { background: #1a1aff; transform: translateY(-1px); }
+.burn-btn:active { transform: translateY(0); }
+.burn-btn-main {
+  font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05;
+}
+.burn-btn-sub {
+  font-family: var(--mono); font-size: 11px; opacity: 0.85;
+  margin-top: 6px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.burn-btn-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.burn-btn-arrow {
+  font-family: var(--sans); font-size: 22px; font-weight: 700;
+  letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 26px;
+  background: #fff; color: var(--blue);
+  border-radius: 6px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+  transition: transform .12s, box-shadow .12s;
+}
+.burn-btn:hover .burn-btn-arrow { transform: translateY(-1px); box-shadow: 0 5px 0 rgba(0,0,0,0.25); }
+.burn-btn-arrow .kbd {
+  font-family: var(--mono); font-size: 14px; font-weight: 500;
+  padding: 2px 6px;
+  border: 1px solid rgba(0,0,255,0.25);
+  border-radius: 3px;
+  color: var(--blue);
+}
+.burn-cost {
+  background: var(--smoke);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 18px 22px;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.burn-cost > div { display: flex; flex-direction: column; gap: 4px; }
+.burn-cost .k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; }
+.burn-cost .v { font-family: var(--mono); font-size: 18px; font-weight: 500; }
+.burn-cost .v.small { font-size: 13px; opacity: 0.85; }
+
+/* hero footnote ticker */
+.hero-foot {
+  margin-top: 20px;
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  opacity: 0.55;
+  display: flex; gap: 24px; flex-wrap: wrap;
+}
+.hero-foot span::before { content: "// "; opacity: 0.55; }
+
+/* ============== SECTION BASE ============== */
+section.body {
+  max-width: 1340px; margin: 0 auto;
+  padding: 112px 28px;
+}
+section.body + section.body { border-top: 1px solid var(--line); }
+.section-eyebrow {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--blue-3);
+  margin-bottom: 18px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-eyebrow::before {
+  content: ""; width: 28px; height: 1px; background: var(--blue-3); display: inline-block;
+}
+.section-title {
+  font-size: clamp(40px, 5.6vw, 76px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+  margin-bottom: 18px;
+  max-width: 1000px;
+  text-wrap: balance;
+}
+.section-title em { font-style: normal; color: var(--blue-3); }
+.section-lede {
+  font-size: 18px; line-height: 1.55; opacity: 0.7;
+  max-width: 640px; margin-bottom: 64px;
+}
+
+/* light section */
+section.body.light {
+  background: var(--paper); color: var(--ink);
+  max-width: none;
+  padding: 112px 28px;
+  border-top: 1px solid var(--line);
+}
+section.body.light .section-inner {
+  max-width: 1340px; margin: 0 auto;
+}
+section.body.light .section-eyebrow { color: var(--blue); }
+section.body.light .section-eyebrow::before { background: var(--blue); }
+
+/* ============== RULES GRID ============== */
+.rules-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line-strong);
+  border: 1px solid var(--line-strong);
+}
+.rule {
+  background: var(--ink);
+  padding: 32px 28px;
+  min-height: 320px;
+  display: flex; flex-direction: column;
+  position: relative;
+}
+.rule-num {
+  font-family: var(--mono); font-size: 12px; color: var(--blue-3);
+  margin-bottom: 36px; letter-spacing: 0.06em;
+}
+.rule h3 { font-size: 24px; font-weight: 600; margin-bottom: 12px; letter-spacing: -0.015em; line-height: 1.15; }
+.rule p { font-size: 14px; line-height: 1.6; opacity: 0.72; }
+.rule .rule-foot {
+  margin-top: auto; padding-top: 32px;
+  font-family: var(--mono); font-size: 11px; opacity: 0.45;
+  letter-spacing: 0.04em;
+}
+.rule .rule-foot strong { color: var(--blue-3); font-weight: 500; }
+
+/* ============== POOL CONFIG ============== */
+.pool-section { /* light */ }
+.pool-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.pool-spec {
+  background: #fff;
+  border: 1px solid var(--line-dark-strong);
+}
+.spec-head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line-dark);
+  background: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: rgba(0,0,0,0.55);
+}
+.spec-head strong { color: var(--ink); font-weight: 600; }
+.spec-row {
+  display: grid; grid-template-columns: 180px 1fr;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line-dark);
+  gap: 24px;
+  font-family: var(--mono); font-size: 14px;
+  align-items: baseline;
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-key { opacity: 0.55; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.spec-val { font-weight: 500; }
+.spec-val .addr { font-size: 13px; opacity: 0.75; word-break: break-all; }
+.spec-val .tag {
+  display: inline-block; padding: 2px 8px;
+  background: var(--blue); color: #fff; border-radius: 3px;
+  font-size: 10px; margin-left: 8px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
+}
+.spec-val .tag.neutral { background: #000; }
+.spec-val .tag.ghost { background: transparent; border: 1px solid rgba(0,0,0,0.3); color: #000; }
+.spec-val .swap-pair { display: inline-flex; align-items: center; gap: 8px; }
+.spec-val .pair-mark { width: 12px; height: 12px; background: var(--blue); border-radius: 2px; }
+
+/* hook flow */
+.hook-flow {
+  background: var(--ink); color: var(--paper);
+  padding: 28px 28px;
+  font-family: var(--mono); font-size: 13px;
+  line-height: 1.6;
+  border: 1px solid var(--ink);
+}
+.hook-flow .flow-title {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  opacity: 0.55; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hook-flow .flow-title::before { content: ""; width: 8px; height: 8px; background: var(--blue-3); border-radius: 1px; }
+.flow-step {
+  display: grid; grid-template-columns: 32px 1fr;
+  gap: 14px; padding: 10px 0;
+  align-items: start;
+  border-bottom: 1px dashed rgba(255,255,255,0.08);
+}
+.flow-step:last-child { border-bottom: none; }
+.flow-mark { color: var(--blue-3); font-weight: 600; }
+.flow-text { line-height: 1.55; }
+.flow-text .branch { display: block; padding-left: 18px; opacity: 0.75; font-size: 12px; }
+.flow-text .branch::before { content: "↳ "; color: var(--blue-3); }
+.flow-text strong { color: #fff; font-weight: 500; }
+
+/* ============== ACTIVITY FEED ============== */
+.feed-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+  font-family: var(--mono); font-size: 12px;
+}
+.feed-tabs { display: flex; gap: 4px; }
+.feed-tabs button {
+  background: transparent; color: rgba(255,255,255,0.5);
+  border: 1px solid var(--line-strong);
+  padding: 8px 14px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  font-family: var(--mono); font-size: 11px;
+  cursor: pointer; border-radius: 3px;
+}
+.feed-tabs button.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.feed-tabs button:hover:not(.on) { color: #fff; border-color: var(--line-strong); }
+.feed-status { opacity: 0.55; letter-spacing: 0.06em; text-transform: uppercase; font-size: 11px; }
+.feed-status .dot { display: inline-block; width: 6px; height: 6px; background: #22ff77; border-radius: 50%; margin-right: 8px; vertical-align: middle; animation: livePulse 1.4s ease-in-out infinite; }
+
+.feed-table {
+  width: 100%;
+  font-family: var(--mono);
+  border-collapse: collapse;
+  font-size: 13px;
+  border-top: 1px solid var(--line-strong);
+}
+.feed-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 400;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  opacity: 0.5;
+  border-bottom: 1px solid var(--line-strong);
+}
+.feed-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+.feed-table tr.leader td { background: rgba(0,0,255,0.12); position: relative; }
+.feed-table tr.leader td:first-child { color: #fff; }
+.feed-table td.t { opacity: 0.62; width: 12%; }
+.feed-table td.who { width: 28%; }
+.feed-table td.who .ens { color: #fff; }
+.feed-table td.who .addr { opacity: 0.55; margin-left: 8px; font-size: 12px; }
+.feed-table td.amt { font-weight: 500; width: 22%; }
+.feed-table td.amt .unit { opacity: 0.55; margin-left: 4px; }
+.feed-table td.lasted { opacity: 0.72; width: 18%; }
+.feed-table td.tx { width: 20%; }
+.feed-table td.tx a { color: var(--blue-3); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.feed-table td.tx a::after { content: "↗"; opacity: 0.7; font-size: 11px; }
+.feed-table td.tag-cell .tag {
+  display: inline-block; padding: 1px 8px; border-radius: 2px;
+  font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+}
+.feed-table td.tag-cell .tag.lead { background: var(--blue); color: #fff; }
+.feed-table tr:hover td { background: rgba(255,255,255,0.04); }
+.feed-table tr.leader:hover td { background: rgba(0,0,255,0.18); }
+
+/* ============== HALL OF FLAME ============== */
+.hall-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line-strong);
+  border: 1px solid var(--line-strong);
+  margin-top: 8px;
+}
+.hall-card {
+  background: var(--ink);
+  padding: 28px;
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative;
+  min-height: 220px;
+}
+.hall-card .round { font-family: var(--mono); font-size: 11px; color: var(--blue-3); letter-spacing: 0.14em; text-transform: uppercase; }
+.hall-card .winner-amt { font-family: var(--mono); font-size: 40px; font-weight: 500; letter-spacing: -0.025em; line-height: 1; margin-top: 6px; }
+.hall-card .winner-amt .unit { font-size: 18px; opacity: 0.55; margin-left: 4px; }
+.hall-card .winner-usd { font-family: var(--mono); font-size: 12px; opacity: 0.5; margin-top: -2px; }
+.hall-card .winner-line { font-family: var(--mono); font-size: 13px; margin-top: 18px; opacity: 0.85; }
+.hall-card .winner-meta {
+  font-family: var(--mono); font-size: 11px; opacity: 0.5;
+  margin-top: auto; padding-top: 18px;
+  display: flex; gap: 16px;
+}
+
+/* ============== FAQ ============== */
+.faq-list { display: flex; flex-direction: column; max-width: 980px; }
+.faq-item {
+  padding: 28px 0;
+  border-top: 1px solid var(--line-dark-strong);
+}
+.faq-item:last-child { border-bottom: 1px solid var(--line-dark-strong); }
+.faq-q {
+  display: grid; grid-template-columns: 56px 1fr 28px;
+  align-items: baseline;
+  font-size: 24px; font-weight: 500; letter-spacing: -0.015em;
+  gap: 16px;
+  cursor: pointer;
+}
+.faq-q .num { font-family: var(--mono); font-size: 13px; opacity: 0.4; }
+.faq-q .plus { text-align: right; font-family: var(--mono); opacity: 0.4; font-size: 20px; }
+.faq-a {
+  margin-top: 18px; padding-left: 72px;
+  font-size: 16px; line-height: 1.7; opacity: 0.78;
+  max-width: 800px;
+}
+.faq-a code {
+  font-family: var(--mono); font-size: 13px;
+  background: rgba(0,0,0,0.08); padding: 2px 6px; border-radius: 3px;
+}
+
+/* ============== FOOTER ============== */
+footer {
+  background: var(--blue);
+  color: #fff;
+  padding: 88px 28px 28px;
+  position: relative; overflow: hidden;
+}
+.footer-inner {
+  max-width: 1340px; margin: 0 auto;
+  position: relative; z-index: 2;
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 48px;
+}
+.foot-brand h2 {
+  font-size: clamp(72px, 11vw, 152px);
+  font-weight: 700; letter-spacing: -0.05em;
+  line-height: 0.86; margin-bottom: 20px;
+}
+.foot-brand p {
+  font-family: var(--mono); font-size: 13px;
+  opacity: 0.78; max-width: 320px; line-height: 1.6;
+}
+.foot-col h4 {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  opacity: 0.72; margin-bottom: 18px;
+}
+.foot-col a {
+  display: block; color: #fff; text-decoration: none;
+  padding: 5px 0; font-size: 14px; opacity: 0.9;
+  transition: opacity .12s;
+}
+.foot-col a:hover { opacity: 1; }
+.foot-meta {
+  max-width: 1340px; margin: 64px auto 0;
+  border-top: 1px solid rgba(255,255,255,0.25);
+  padding-top: 22px;
+  display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 11px; opacity: 0.85;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  position: relative; z-index: 2;
+}
+.foot-meta .built-on { display: flex; align-items: center; gap: 8px; }
+.foot-meta .built-on .sq { width: 14px; height: 14px; background: #fff; border-radius: 2px; }
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 1000px) {
+  .hero-stats { grid-template-columns: 1fr; }
+  .hero-stat { border-right: none; border-bottom: 1px solid var(--line-strong); }
+  .hero-stat:last-child { border-bottom: none; }
+  .cta-row { grid-template-columns: 1fr; }
+  .rules-grid { grid-template-columns: repeat(2, 1fr); }
+  .pool-grid { grid-template-columns: 1fr; }
+  .hall-grid { grid-template-columns: 1fr; }
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 640px) {
+  nav.top { padding: 12px 18px; }
+  .hero { padding: 32px 18px 48px; }
+  section.body, section.body.light { padding: 72px 18px; }
+  .rules-grid { grid-template-columns: 1fr; }
+  .footer-inner { grid-template-columns: 1fr; }
+  .timer-clock { font-size: 84px; }
+  .burn-btn-main { font-size: 24px; }
+  .feed-table { font-size: 11px; }
+  .feed-table td { padding: 10px 8px; }
+  .feed-table td.t, .feed-table td.lasted { display: none; }
+}
+
+/* ============== DAPP ADDITIONS (wallet modal + toast + banner) ============== */
+#deploy-banner {
+  display: none; position: sticky; top: 0; z-index: 70;
+  background: #ffb800; color: #000;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.05em;
+  padding: 10px 28px; text-align: center;
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+}
+#deploy-banner.show { display: block; }
+#deploy-banner code { background: rgba(0,0,0,0.15); padding: 1px 5px; border-radius: 3px; }
+
+.wallet-pill {
+  display: none;
+  font-family: var(--mono); font-size: 12px;
+  align-items: center; gap: 8px;
+  padding: 6px 10px; border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+}
+.wallet-pill.connected { display: inline-flex; }
+.wallet-pill .dot-ok { width: 7px; height: 7px; background: #22ff77; border-radius: 50%; }
+
+#modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .18s ease;
+}
+#modal-backdrop.show { display: flex; opacity: 1; }
+.modal-card {
+  background: var(--smoke);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 420px; width: calc(100% - 32px);
+  font-family: var(--sans);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+}
+.modal-card h3 {
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.modal-card .modal-sub {
+  font-family: var(--mono); font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  opacity: 0.55; margin-bottom: 22px;
+}
+.wallet-opt {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%;
+  padding: 14px 16px; margin-bottom: 8px;
+  background: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--paper);
+  font-family: var(--sans); font-size: 15px; font-weight: 500;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, transform .12s;
+}
+.wallet-opt:hover { background: #1a1a28; border-color: rgba(255,255,255,0.35); transform: translateY(-1px); }
+.wallet-opt img { width: 28px; height: 28px; border-radius: 6px; }
+.wallet-opt .opt-right { margin-left: auto; font-family: var(--mono); font-size: 11px; opacity: 0.55; }
+.wallet-opt[data-detected="no"] .opt-right { color: #ffb800; }
+.modal-close {
+  display: block; margin-top: 14px; width: 100%;
+  background: transparent; border: 1px solid var(--line);
+  color: rgba(255,255,255,0.5);
+  padding: 10px; border-radius: 6px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; cursor: pointer;
+}
+.modal-close:hover { color: #fff; border-color: var(--line-strong); }
+
+#toast-stack {
+  position: fixed; bottom: 24px; right: 24px; z-index: 110;
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: 380px;
+}
+.toast {
+  background: var(--smoke);
+  border: 1px solid var(--line-strong);
+  color: var(--paper);
+  font-family: var(--mono); font-size: 13px;
+  padding: 12px 16px; border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .25s, transform .25s;
+}
+.toast.toast-show { opacity: 1; transform: translateY(0); }
+.toast-ok   { border-color: #22ff77; color: #d6ffe6; }
+.toast-info { border-color: var(--blue-3); color: #d6dfff; }
+.toast-warn { border-color: #ffb800; color: #ffe5a8; }
+.toast-err  { border-color: #ff4d6a; color: #ffd0d8; }
+
+/* Wallet-aware action chips below the burn CTA */
+.dapp-actions {
+  display: none;
+  margin-top: 14px; gap: 10px; flex-wrap: wrap;
+  font-family: var(--mono); font-size: 12px;
+}
+.dapp-actions.show { display: flex; }
+.dapp-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  background: rgba(0,0,255,0.18);
+  border: 1px solid rgba(120,140,255,0.45);
+  color: #d6dfff;
+  border-radius: 4px; cursor: pointer;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  transition: background .12s, transform .12s;
+}
+.dapp-chip:hover { background: rgba(0,0,255,0.3); transform: translateY(-1px); }
+.dapp-chip.warn { background: rgba(255,184,0,0.14); border-color: rgba(255,184,0,0.55); color: #ffe5a8; }
+.dapp-chip.ok { background: rgba(34,255,119,0.14); border-color: rgba(34,255,119,0.55); color: #c4ffd9; }
+
+/* selection */
+::selection { background: var(--blue); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ====================== DEPLOY BANNER ====================== -->
+<div id="deploy-banner">
+  ⚠ Pre-launch · contract addresses pending. Edit <code>CONFIG</code> in <code>website/app.js</code> after deploy to go live.
+</div>
+
+<!-- ====================== NAV ====================== -->
+<nav class="top">
+  <div class="brand">
+    <img class="brand-logo" src="assets/logo.png" alt="BURN">
+    <span class="brand-name">BURN</span>
+    <span class="brand-on">on base</span>
+  </div>
+  <div class="nav-links">
+    <a href="#mechanics">mechanics</a>
+    <a href="#pool">the pool</a>
+    <a href="#feed">live burns</a>
+    <a href="#hall">hall of flame</a>
+    <a href="#faq">faq</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-block" id="nav-block">block —</span>
+    <span class="wallet-pill" id="wallet-pill" title="click to disconnect"><span class="dot-ok"></span><span id="wallet-pill-addr">—</span></span>
+    <button class="nav-cta" id="connect-btn" style="border:none;cursor:pointer">connect wallet <span>→</span></button>
+  </div>
+</nav>
+
+<!-- ====================== HERO ====================== -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-iris"></div>
+  <svg class="hero-flames" preserveAspectRatio="none" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <filter id="flame-warp" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.022" numOctaves="2" seed="3" result="noise">
+          <animate attributeName="baseFrequency" values="0.012 0.022;0.018 0.038;0.012 0.022" dur="16s" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="140" />
+      </filter>
+      <filter id="flame-warp-2" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.018 0.03" numOctaves="2" seed="11" result="noise">
+          <animate attributeName="baseFrequency" values="0.018 0.03;0.012 0.02;0.018 0.03" dur="19s" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="160" />
+      </filter>
+      <radialGradient id="flame-l" cx="0%" cy="100%" r="90%">
+        <stop offset="0%"  stop-color="#a8b8ff" stop-opacity="0.95" />
+        <stop offset="18%" stop-color="#3c5cff" stop-opacity="0.85" />
+        <stop offset="42%" stop-color="#0000FF" stop-opacity="0.7"  />
+        <stop offset="70%" stop-color="#00E5FF" stop-opacity="0.32" />
+        <stop offset="100%" stop-color="#0a0a4a" stop-opacity="0"   />
+      </radialGradient>
+      <radialGradient id="flame-r" cx="100%" cy="100%" r="90%">
+        <stop offset="0%"  stop-color="#d6c0ff" stop-opacity="0.95" />
+        <stop offset="18%" stop-color="#7a5aff" stop-opacity="0.85" />
+        <stop offset="42%" stop-color="#1818ff" stop-opacity="0.7"  />
+        <stop offset="70%" stop-color="#b22bff" stop-opacity="0.30" />
+        <stop offset="100%" stop-color="#0a0a4a" stop-opacity="0"   />
+      </radialGradient>
+      <radialGradient id="flame-t" cx="50%" cy="0%" r="70%">
+        <stop offset="0%"  stop-color="#e0eaff" stop-opacity="0.55" />
+        <stop offset="30%" stop-color="#3c5cff" stop-opacity="0.45" />
+        <stop offset="60%" stop-color="#00E5FF" stop-opacity="0.22" />
+        <stop offset="100%" stop-color="#0a0a4a" stop-opacity="0"   />
+      </radialGradient>
+    </defs>
+    <ellipse cx="-40" cy="760" rx="360" ry="560" fill="url(#flame-l)" filter="url(#flame-warp)" />
+    <ellipse cx="1040" cy="760" rx="360" ry="560" fill="url(#flame-r)" filter="url(#flame-warp-2)" />
+    <ellipse cx="500" cy="-40" rx="620" ry="260" fill="url(#flame-t)" filter="url(#flame-warp)" opacity="0.85" />
+    <ellipse cx="170" cy="720" rx="160" ry="320" fill="url(#flame-l)" filter="url(#flame-warp-2)" opacity="0.7" />
+    <ellipse cx="830" cy="720" rx="160" ry="320" fill="url(#flame-r)" filter="url(#flame-warp)"   opacity="0.7" />
+  </svg>
+  <div class="hero-veil"></div>
+  <div class="hero-inner">
+
+    <div class="hero-meta">
+      <span class="chip"><span class="live-dot"></span>round <span id="round-id">—</span> · live</span>
+      <span class="chip">pool <span id="hero-game-addr">0x…</span></span>
+      <span class="chip">v4 hook <span id="hero-hook-addr">0x…</span></span>
+      <span class="pool-id" id="hero-last-burn">—</span>
+    </div>
+
+    <div class="timer-block">
+      <div class="timer-label">last burner wins in</div>
+      <div class="timer-clock"><span id="m">09</span><span class="colon">:</span><span id="s">47</span></div>
+      <div class="timer-bar"><div class="timer-bar-fill" id="bar"></div></div>
+      <div class="timer-sub">any burn resets to 10:00 · winner takes 80% of the pot</div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="lbl">prize pool</span>
+        <span class="val"><span id="stat-pot">0.0000</span><span class="unit">ETH</span></span>
+        <span class="sub" id="stat-pot-sub">live · onchain</span>
+      </div>
+      <div class="hero-stat">
+        <span class="lbl">current leader</span>
+        <span class="val addr-leader"><span class="crown">★</span> <span id="stat-leader">no leader</span></span>
+        <span class="sub" id="stat-leader-sub">be the first to burn</span>
+      </div>
+      <div class="hero-stat">
+        <span class="lbl">total burned to 0xdEaD</span>
+        <span class="val"><span id="stat-dead">0</span><span class="unit">BURN</span></span>
+        <span class="sub" id="stat-dead-sub">0.00% of supply at 0xdEaD</span>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="burn-btn" id="burn-btn">
+        <div>
+          <div class="burn-btn-main">Burn 500,000 $BURN →</div>
+          <div class="burn-btn-sub" id="burn-btn-sub">reset the clock · take the lead · 0.05% of supply</div>
+        </div>
+        <div class="burn-btn-right">
+          <span class="burn-btn-arrow"><span class="kbd">⏎</span> burn</span>
+        </div>
+      </button>
+      <div class="burn-cost">
+        <div>
+          <span class="k">your BURN balance</span>
+          <span class="v" id="burn-cost-balance">—</span>
+        </div>
+        <div>
+          <span class="k">allowance</span>
+          <span class="v small" id="burn-cost-allowance">—</span>
+        </div>
+        <div>
+          <span class="k">your win odds</span>
+          <span class="v" id="burn-cost-odds">—</span>
+        </div>
+        <div>
+          <span class="k">net if you win (80%)</span>
+          <span class="v small" id="burn-cost-net">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dapp-actions" id="dapp-actions">
+      <button class="dapp-chip warn" id="settle-chip" style="display:none">settle round →</button>
+      <button class="dapp-chip ok"   id="withdraw-chip" style="display:none">withdraw <span id="withdraw-chip-amt">—</span> ETH →</button>
+      <button class="dapp-chip"      id="flush-chip">flush hook residuals →</button>
+    </div>
+
+    <div class="hero-foot">
+      <span>contract: <span id="foot-game">—</span></span>
+      <span>chain: base · 8453</span>
+      <span id="foot-net">verified on basescan</span>
+      <span>renounced ownership</span>
+      <span>audit: pending</span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ====================== MECHANICS ====================== -->
+<section class="body" id="mechanics">
+  <div class="section-eyebrow">how it works</div>
+  <h2 class="section-title">The rules are <em>brutally</em> simple. Burn last, win the pot.</h2>
+  <p class="section-lede">Every burn is exactly 0.05% of supply. Every burn resets a 10-minute timer. The hook quietly fattens the pot on every swap. When the clock hits zero, whoever burned last walks away with 80% of it.</p>
+
+  <div class="rules-grid">
+    <div class="rule">
+      <span class="rule-num">01 / burn</span>
+      <h3>Burn 500,000 BURN</h3>
+      <p>Call <code class="mono">BurnGame.burn()</code>. The contract pulls exactly 500,000 BURN — 0.05% of total supply — from your wallet and sends it to <code class="mono">0x…dEaD</code>. Total supply is unchanged; dead-wallet balance only grows.</p>
+      <div class="rule-foot"><strong>fixed</strong> · 500,000 BURN per burn · forever</div>
+    </div>
+    <div class="rule">
+      <span class="rule-num">02 / lead</span>
+      <h3>Become the leader</h3>
+      <p>You are now the address-of-record. The timer resets to <span class="mono">10:00</span>. If no one burns again before it hits zero, the pot is yours.</p>
+      <div class="rule-foot"><strong>reset</strong> · countdown → 600s</div>
+    </div>
+    <div class="rule">
+      <span class="rule-num">03 / hook</span>
+      <h3>The hook feeds the pot</h3>
+      <p>Every swap in the V4 pool pays a 1% hook fee on top of the 0.3% LP fee. The hook converts it to ETH inside the same transaction and routes it straight into the prize pool.</p>
+      <div class="rule-foot"><strong>afterSwap</strong> · 1% · auto-routed to ETH</div>
+    </div>
+    <div class="rule">
+      <span class="rule-num">04 / win</span>
+      <h3>Last burner takes 80%</h3>
+      <p>When the timer hits zero, the leader claims 80% of the pot. The remaining 20% rolls into the next round's pot. A new round opens immediately — same rules, fresh clock.</p>
+      <div class="rule-foot"><strong>payout</strong> · 80% winner · 20% rollover</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== POOL CONFIG (LIGHT) ====================== -->
+<section class="body light" id="pool">
+  <div class="section-inner">
+    <div class="section-eyebrow">the pool · the hook</div>
+    <h2 class="section-title">One pool. One hook.<br>Two lines of solidity stand between you and the pot.</h2>
+    <p class="section-lede" style="opacity: 0.65;">A native ETH / BURN pool on Uniswap V4, fee 0.3%, ownership renounced, hook permissions limited to <code class="mono">afterSwap</code>. Everything visible on-chain.</p>
+
+    <div class="pool-grid">
+
+      <div class="pool-spec">
+        <div class="spec-head">
+          <span><strong>PoolKey</strong> · ETH ↔ BURN</span>
+          <span>read-only</span>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">currency0</div>
+          <div class="spec-val">
+            <span class="swap-pair"><span class="pair-mark" style="background:#000;"></span>ETH (native)</span>
+            <span class="tag neutral">0x0</span>
+            <div class="addr">0x0000000000000000000000000000000000000000</div>
+          </div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">currency1</div>
+          <div class="spec-val">
+            <span class="swap-pair"><span class="pair-mark"></span>BURN</span>
+            <span class="tag">ERC20</span>
+            <div class="addr">0xB12A8F4E92aD7Cb8E1E9D5B7c41fF06aB3b9F8D4</div>
+          </div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">fee</div>
+          <div class="spec-val">0.3%<span class="tag ghost">3000</span></div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">tickSpacing</div>
+          <div class="spec-val">60<span class="tag ghost">standard</span></div>
+        </div>
+        <div class="spec-row">
+          <div class="spec-key">hooks</div>
+          <div class="spec-val">
+            <span>BurnHook</span><span class="tag">v4</span>
+            <div class="addr">0x4848……000080cC (perms: afterSwap only)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hook-flow">
+        <div class="flow-title">afterSwap(swap, delta) — hook execution</div>
+
+        <div class="flow-step">
+          <div class="flow-mark">01</div>
+          <div class="flow-text">
+            <strong>compute hookFee</strong> = abs(unspecifiedDelta) × 1%
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-mark">02</div>
+          <div class="flow-text">
+            <strong>route by side:</strong>
+            <span class="branch">if unspecified == ETH → <strong>take(ETH, hookFee)</strong> → pot += hookFee</span>
+            <span class="branch">if unspecified == BURN → <strong>swap(BURN → ETH)</strong> inside same tx</span>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-mark">03</div>
+          <div class="flow-text">
+            <strong>settle</strong> deltas, transfer ETH into BurnGame.pool
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-mark">04</div>
+          <div class="flow-text">
+            <strong>emit</strong> HookFeeRouted(swap.sender, hookFee, ETH)
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-mark">↺</div>
+          <div class="flow-text">
+            net effect: every swap quietly tops up the pot. <span style="opacity:0.6;">no governance. no upgrade. no admin.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ====================== LIVE FEED ====================== -->
+<section class="body" id="feed">
+  <div class="section-eyebrow">live burns · round 007</div>
+  <h2 class="section-title">Every burn, in order, forever on-chain.</h2>
+
+  <div class="feed-toolbar">
+    <div class="feed-tabs">
+      <button class="on">all burns</button>
+      <button>this round</button>
+      <button>past 24h</button>
+      <button>my wallet</button>
+    </div>
+    <div class="feed-status"><span class="dot"></span>indexing block 22,841,094 · 1.8s ago</div>
+  </div>
+
+  <table class="feed-table">
+    <thead>
+      <tr>
+        <th class="t">time</th>
+        <th class="who">burner</th>
+        <th class="amt">amount</th>
+        <th class="lasted">lasted</th>
+        <th class="tag-cell">status</th>
+        <th class="tx">tx</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="leader">
+        <td class="t mono">03:13 ago</td>
+        <td class="who"><span class="ens">burnpilled.base</span><span class="addr mono">0xBAE5…41fF</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">leading</td>
+        <td class="tag-cell"><span class="tag lead">★ leader</span></td>
+        <td class="tx mono"><a href="#">0x9c4a…f201</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">07:42 ago</td>
+        <td class="who"><span class="ens">degenmom.eth</span><span class="addr mono">0x7d1c…aA39</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x12fe…b9c4</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">12:11 ago</td>
+        <td class="who"><span class="ens">0xVitalik.base</span><span class="addr mono">0xd8aB…7c52</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x77ab…0d3e</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">14:38 ago</td>
+        <td class="who"><span class="ens">—</span><span class="addr mono">0x2f44…91Ce</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">02:27</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0xa033…ff19</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">19:02 ago</td>
+        <td class="who"><span class="ens">timewaster.eth</span><span class="addr mono">0xc711…30Bd</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:24</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x0e88…bb27</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">23:31 ago</td>
+        <td class="who"><span class="ens">basedfren.base</span><span class="addr mono">0x4901…2eFa</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x55cd…0042</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">28:00 ago</td>
+        <td class="who"><span class="ens">—</span><span class="addr mono">0xfa3B…71eD</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0xbe22…1199</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">32:29 ago</td>
+        <td class="who"><span class="ens">incinerate.base</span><span class="addr mono">0x9c44…aB7C</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x4427…ccd1</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">36:58 ago</td>
+        <td class="who"><span class="ens">—</span><span class="addr mono">0x3b09…f1A2</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0xeeac…02ff</a></td>
+      </tr>
+      <tr>
+        <td class="t mono">41:27 ago</td>
+        <td class="who"><span class="ens">phoenix.base</span><span class="addr mono">0x8e7d…cd60</span></td>
+        <td class="amt mono">500,000<span class="unit">BURN</span></td>
+        <td class="lasted mono">04:29</td>
+        <td class="tag-cell"><span class="tag">overtaken</span></td>
+        <td class="tx mono"><a href="#">0x6633…74cb</a></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ====================== HALL OF FLAME ====================== -->
+<section class="body" id="hall">
+  <div class="section-eyebrow">hall of flame · past winners</div>
+  <h2 class="section-title">Six rounds. Six last burners. Forty-one ETH paid out.</h2>
+
+  <div class="hall-grid">
+    <div class="hall-card">
+      <span class="round">round 006 · closed</span>
+      <div class="winner-amt">12.45<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $43,581 · oct 11, 2025</div>
+      <div class="winner-line"><strong>cryptotorch.base</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0x8f31…bd02</div>
+      <div class="winner-meta">
+        <span>187 burns</span>
+        <span>4d 11h round</span>
+        <span>last @ 09:58</span>
+      </div>
+    </div>
+    <div class="hall-card">
+      <span class="round">round 005 · closed</span>
+      <div class="winner-amt">8.72<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $29,648 · sep 28, 2025</div>
+      <div class="winner-line"><strong>—</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0x44a1…ee93</div>
+      <div class="winner-meta">
+        <span>142 burns</span>
+        <span>3d 02h round</span>
+        <span>last @ 09:51</span>
+      </div>
+    </div>
+    <div class="hall-card">
+      <span class="round">round 004 · closed</span>
+      <div class="winner-amt">6.18<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $19,792 · sep 19, 2025</div>
+      <div class="winner-line"><strong>kindling.eth</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0x21bb…00aE</div>
+      <div class="winner-meta">
+        <span>96 burns</span>
+        <span>1d 21h round</span>
+        <span>last @ 09:47</span>
+      </div>
+    </div>
+    <div class="hall-card">
+      <span class="round">round 003 · closed</span>
+      <div class="winner-amt">5.94<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $18,116 · sep 09, 2025</div>
+      <div class="winner-line"><strong>burnpilled.base</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0xBAE5…41fF</div>
+      <div class="winner-meta">
+        <span>108 burns</span>
+        <span>2d 06h round</span>
+        <span>last @ 09:59</span>
+      </div>
+    </div>
+    <div class="hall-card">
+      <span class="round">round 002 · closed</span>
+      <div class="winner-amt">4.31<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $12,930 · aug 31, 2025</div>
+      <div class="winner-line"><strong>—</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0x07fc…91dD</div>
+      <div class="winner-meta">
+        <span>71 burns</span>
+        <span>1d 14h round</span>
+        <span>last @ 09:38</span>
+      </div>
+    </div>
+    <div class="hall-card">
+      <span class="round">round 001 · closed · genesis</span>
+      <div class="winner-amt">3.40<span class="unit">ETH</span></div>
+      <div class="winner-usd">≈ $9,520 · aug 22, 2025</div>
+      <div class="winner-line"><strong>firstburner.base</strong></div>
+      <div class="winner-line mono" style="opacity: 0.6; font-size: 12px;">0xC0FF…EE00</div>
+      <div class="winner-meta">
+        <span>54 burns</span>
+        <span>0d 22h round</span>
+        <span>last @ 09:41</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FAQ (LIGHT) ====================== -->
+<section class="body light" id="faq">
+  <div class="section-inner">
+    <div class="section-eyebrow">questions you should ask</div>
+    <h2 class="section-title">Read this before you burn anything.</h2>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">01</span><span>If totalSupply doesn't decrease, why call it a burn?</span><span class="plus">−</span></div>
+        <div class="faq-a">Because tokens are <em>permanently unspendable</em> once they're at <code>0x…dEaD</code>. <code>balanceOf(0xdEaD)</code> is the canonical burn counter — every block explorer, every analytics dashboard, every chart treats it as supply destruction. We chose this path over <code>ERC20._burn</code> so accounting stays public, indexable, and provable on Basescan in one query — no internal state assumptions required.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">02</span><span>Can the hook be drained, MEV'd, or sandwiched?</span><span class="plus">−</span></div>
+        <div class="faq-a">The hook only has <code>afterSwap</code> permission — it can't observe price before swaps and can't reorder. The internal BURN→ETH swap when the unspecified side lands in BURN happens atomically in the same transaction; slippage is bounded by the pool's own liquidity, and the worst case is a smaller pot contribution, never a drain. The pot itself is held in <code>BurnGame</code>, not in the hook.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">03</span><span>What stops one whale from auto-burning forever?</span><span class="plus">−</span></div>
+        <div class="faq-a">Math. Each burn costs 500,000 BURN. At current market price that's ≈ 0.0124 ETH — call it $43. Holding the lead for a full 10 minutes against a single competitor requires winning a war of attrition where the floor on cost is the BURN token's spot price, which strengthens every round as supply at <code>0xdEaD</code> grows. Whales can burn — but they pay the same price as everyone else, and they don't get the timer cheaper.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">04</span><span>Why 0.05% of supply per burn?</span><span class="plus">−</span></div>
+        <div class="faq-a">Calibrated so a single burn is a non-trivial commitment (≈ $43 at launch) but not so steep that the average wallet is priced out. At 0.05%, the supply can absorb 2,000 burns before the dead-wallet share exceeds 100% — leaving room for many full rounds before the game becomes uneconomical and the protocol naturally retires.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">05</span><span>What happens to the 20% rollover?</span><span class="plus">−</span></div>
+        <div class="faq-a">It seeds the next round's pot immediately. Round 7 opened with 0.86 ETH already inside from round 6's rollover; the rest accumulated from hook fees and the burn-side conversions. There is no treasury, no team allocation, no admin withdraw — the 20% is hard-coded into <code>BurnGame.settleRound()</code> as a forwarding op.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><span class="num">06</span><span>Is this gambling?</span><span class="plus">−</span></div>
+        <div class="faq-a">It's a coordination game with on-chain payouts. Whether that's gambling in your jurisdiction is a question you should answer yourself before you click anything. Nothing here is investment advice. Tokens that go to <code>0x…dEaD</code> do not come back.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================== FOOTER ====================== -->
+<footer>
+  <div class="footer-inner">
+    <div class="foot-brand">
+      <h2>BURN</h2>
+      <p>The last-burner-takes-all game on Uniswap V4. Native ETH/BURN pool. Hook-funded pot. Ownership renounced. Pray for double digits.</p>
+    </div>
+    <div class="foot-col">
+      <h4>protocol</h4>
+      <a href="https://basescan.org/address/0xb1DB810363de384679aAc6b05C23fefAe43823D1" target="_blank" rel="noopener">basescan / BurnGame ↗</a>
+      <a href="https://basescan.org/address/0xBB5F858d2bB1abeEa1adf4103DEcEbC2321d0044" target="_blank" rel="noopener">basescan / BurnHook ↗</a>
+      <a href="https://basescan.org/address/0x215c7B9A00403B2a89A766F5D36E1178Dda22895" target="_blank" rel="noopener">basescan / BURN token ↗</a>
+      <a href="https://basescan.org/token/0x215c7B9A00403B2a89A766F5D36E1178Dda22895?a=0x000000000000000000000000000000000000dEaD" target="_blank" rel="noopener">0xdEaD holdings ↗</a>
+      <a id="foot-github-protocol" href="https://github.com/basedburn/basedburn" target="_blank" rel="noopener">github / contracts ↗</a>
+    </div>
+    <div class="foot-col">
+      <h4>social</h4>
+      <a href="https://x.com/BasedBurnfi" target="_blank" rel="noopener">x · @BasedBurnfi ↗</a>
+      <a id="foot-github-social" href="https://github.com/basedburn/basedburn" target="_blank" rel="noopener">github · basedburn ↗</a>
+    </div>
+    <div class="foot-col">
+      <h4>safety</h4>
+      <a href="#">ownership renounced</a>
+      <a href="#">contracts verified on basescan</a>
+      <a href="#">no admin, no upgrade</a>
+      <a href="#">disclaimer</a>
+    </div>
+  </div>
+  <div class="foot-meta">
+    <span>BURN · 0x215c 7B9A 0040 3B2a 89A7 66F5 D36E 1178 Dda2 2895</span>
+    <span class="built-on"><span class="sq"></span>built on base · chain id 8453</span>
+  </div>
+</footer>
+
+<!-- ============== WALLET MODAL + TOAST STACK ============== -->
+<div id="modal-backdrop">
+  <div class="modal-card">
+    <h3>Connect Wallet</h3>
+    <div class="modal-sub">Base · chain id 8453</div>
+    <button class="wallet-opt" data-wallet="metamask">
+      <img src="../wallets/metamask.png" alt="MetaMask">
+      <span>MetaMask</span>
+      <span class="opt-right" id="opt-metamask-status">—</span>
+    </button>
+    <button class="wallet-opt" data-wallet="okx">
+      <img src="../wallets/okx.png" alt="OKX Wallet">
+      <span>OKX Wallet</span>
+      <span class="opt-right" id="opt-okx-status">—</span>
+    </button>
+    <button class="wallet-opt" data-wallet="binance">
+      <img src="../wallets/binance.png" alt="Binance Wallet">
+      <span>Binance Wallet</span>
+      <span class="opt-right" id="opt-binance-status">—</span>
+    </button>
+    <button class="wallet-opt" data-wallet="tokenpocket">
+      <img src="../wallets/tokenpocket.png" alt="TokenPocket">
+      <span>TokenPocket</span>
+      <span class="opt-right" id="opt-tokenpocket-status">—</span>
+    </button>
+    <button class="modal-close" id="modal-close-btn">Close</button>
+  </div>
+</div>
+
+<div id="toast-stack"></div>
+
+<!-- ============== DAPP MODULE ============== -->
+<script type="module">
+  import {
+    CONFIG, state, subscribe, isConfigured,
+    connectWallet, disconnectWallet,
+    doBurn, doSettle, doWithdrawPrize, doFlush,
+    startPolling, shortAddr, fmtEth, fmtBigNumber, toast,
+  } from './app.js';
+
+  // ---------- 1. setup helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const setText = (id, txt) => { const el = $(id); if (el) el.textContent = txt; };
+  const showEl = (id, on) => { const el = $(id); if (el) el.style.display = on ? '' : 'none'; };
+
+  // ---------- 2. wallet detection ----------
+  function detectWallet(key) {
+    if (key === 'metamask') return !!(window.ethereum?.isMetaMask || window.ethereum?.providers?.some(p => p.isMetaMask));
+    if (key === 'okx') return !!window.okxwallet;
+    if (key === 'binance') return !!(window.BinanceChain || window.binancew3w?.ethereum);
+    if (key === 'tokenpocket') return !!(window.tokenpocket?.ethereum || window.ethereum?.isTokenPocket);
+    return false;
+  }
+  function refreshWalletDetection() {
+    ['metamask', 'okx', 'binance', 'tokenpocket'].forEach((k) => {
+      const el = $('opt-' + k + '-status');
+      if (!el) return;
+      el.textContent = detectWallet(k) ? 'installed' : 'install →';
+      el.parentElement.dataset.detected = detectWallet(k) ? 'yes' : 'no';
+    });
+  }
+
+  // ---------- 3. modal ----------
+  const modal = $('modal-backdrop');
+  function openModal() { refreshWalletDetection(); modal.classList.add('show'); }
+  function closeModal() { modal.classList.remove('show'); }
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  $('modal-close-btn').addEventListener('click', closeModal);
+  document.querySelectorAll('.wallet-opt').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      closeModal();
+      await connectWallet(btn.dataset.wallet);
+    });
+  });
+
+  // ---------- 4. nav: connect / disconnect ----------
+  $('connect-btn').addEventListener('click', openModal);
+  $('wallet-pill').addEventListener('click', () => {
+    if (confirm('Disconnect wallet?')) disconnectWallet();
+  });
+
+  // ---------- 5. burn / settle / withdraw / flush ----------
+  $('burn-btn').addEventListener('click', () => {
+    if (!state.signer) { openModal(); return; }
+    doBurn();
+  });
+  $('settle-chip').addEventListener('click', () => doSettle());
+  $('withdraw-chip').addEventListener('click', () => doWithdrawPrize());
+  $('flush-chip').addEventListener('click', () => doFlush());
+
+  // ---------- 6. countdown ticker (independent 1Hz update, reads state.endTime) ----------
+  const ROUND_DURATION = 10 * 60; // seconds, matches contract constant
+  let demoCountdown = 9 * 60 + 47; // pre-launch fallback
+  function tickTimer() {
+    const m = $('m'), s = $('s'), bar = $('bar');
+    if (!m || !s || !bar) return;
+    let remaining, totalForBar = ROUND_DURATION;
+    if (isConfigured() && state.endTime > 0n) {
+      const now = Math.floor(Date.now() / 1000);
+      remaining = Math.max(0, Number(state.endTime) - now);
+    } else if (isConfigured() && state.endTime === 0n) {
+      remaining = 0;
+    } else {
+      // No contract yet → demo loop
+      if (demoCountdown <= 0) demoCountdown = ROUND_DURATION;
+      remaining = demoCountdown;
+      demoCountdown--;
+    }
+    const mm = Math.floor(remaining / 60);
+    const ss = remaining % 60;
+    m.textContent = String(mm).padStart(2, '0');
+    s.textContent = String(ss).padStart(2, '0');
+    bar.style.width = Math.max(0, (remaining / totalForBar) * 100) + '%';
+  }
+  tickTimer();
+  setInterval(tickTimer, 1000);
+
+  // ---------- 7. subscribe to state and update DOM ----------
+  subscribe((s) => {
+    // top: deploy banner (visible until CONFIG addresses are filled in)
+    $('deploy-banner').classList.toggle('show', !isConfigured());
+
+    // nav block number
+    setText('nav-block', s.blockNumber ? `block ${s.blockNumber.toLocaleString()}` : 'block —');
+
+    // wallet pill / connect button
+    const pill = $('wallet-pill'); const btn = $('connect-btn');
+    if (s.account) {
+      pill.classList.add('connected');
+      $('wallet-pill-addr').textContent = shortAddr(s.account);
+      btn.style.display = 'none';
+    } else {
+      pill.classList.remove('connected');
+      btn.style.display = '';
+    }
+
+    // hero meta
+    setText('round-id', isConfigured() ? Number(s.roundId).toString().padStart(3, '0') : '—');
+    setText('hero-game-addr', isConfigured() ? shortAddr(CONFIG.BURN_GAME) : 'pending');
+    setText('hero-hook-addr', isConfigured() ? shortAddr(CONFIG.BURN_HOOK) : 'pending');
+    setText('hero-last-burn', s.leader && s.leader !== '0x0000000000000000000000000000000000000000'
+      ? `leader: ${shortAddr(s.leader)}`
+      : 'no leader yet · first burner takes over');
+
+    // hero stats
+    setText('stat-pot', fmtEth(s.prizePool, 4));
+    setText('stat-pot-sub', isConfigured() ? `live · onchain · ${fmtEth(s.prizePool, 6)} ETH` : 'pre-launch · demo');
+
+    if (s.leader && s.leader !== '0x0000000000000000000000000000000000000000') {
+      setText('stat-leader', shortAddr(s.leader));
+      const nowSec = Math.floor(Date.now() / 1000);
+      const left = Number(s.endTime) - nowSec;
+      setText('stat-leader-sub', left > 0 ? `endTime in ${formatMS(left)}` : 'round expired · click settle');
+    } else {
+      setText('stat-leader', 'no leader');
+      setText('stat-leader-sub', isConfigured() ? 'be the first to burn' : 'pre-launch');
+    }
+
+    setText('stat-dead', fmtBigNumber(s.totalDead));
+    if (isConfigured()) {
+      const supply = 1_000_000_000n * 10n ** 18n;
+      const pct = s.totalDead === 0n ? 0 : Number((s.totalDead * 10000n) / supply) / 100;
+      setText('stat-dead-sub', `${pct.toFixed(2)}% of supply at 0xdEaD`);
+    } else {
+      setText('stat-dead-sub', 'pre-launch · waiting for first burn');
+    }
+
+    // burn-cost grid
+    setText('burn-cost-balance', s.account ? `${fmtBigNumber(s.userBurnBalance)} BURN` : 'connect wallet');
+    setText('burn-cost-allowance',
+      !s.account ? '—'
+      : s.userAllowance >= CONFIG.BURN_AMOUNT_WEI ? '✓ approved'
+      : 'will request approve');
+    const odds = isConfigured() && s.totalDead > 0n
+      ? `1 / ${Number(s.totalDead / CONFIG.BURN_AMOUNT_WEI || 1n)}`
+      : '—';
+    setText('burn-cost-odds', odds);
+    setText('burn-cost-net', `+${fmtEth((s.prizePool * 80n) / 100n, 4)} ETH`);
+
+    // burn button sub text reflects state
+    if (!isConfigured()) {
+      setText('burn-btn-sub', 'pre-launch · waiting for contract deploy');
+    } else if (!s.account) {
+      setText('burn-btn-sub', 'connect wallet first');
+    } else if (s.userBurnBalance < CONFIG.BURN_AMOUNT_WEI) {
+      setText('burn-btn-sub', `need 500,000 BURN, you have ${fmtBigNumber(s.userBurnBalance)}`);
+    } else {
+      setText('burn-btn-sub', 'reset the clock · take the lead · 0.05% of supply');
+    }
+
+    // chips
+    const actions = $('dapp-actions');
+    const nowSec = Math.floor(Date.now() / 1000);
+    const showSettle = isConfigured() && s.leader !== '0x0000000000000000000000000000000000000000' && Number(s.endTime) > 0 && nowSec >= Number(s.endTime);
+    const showWithdraw = isConfigured() && s.userPending > 0n;
+    showEl('settle-chip', showSettle);
+    showEl('withdraw-chip', showWithdraw);
+    if (showWithdraw) setText('withdraw-chip-amt', fmtEth(s.userPending, 4));
+    if (showSettle || showWithdraw) actions.classList.add('show');
+    else actions.classList.remove('show');
+
+    // footer
+    setText('foot-game', isConfigured() ? CONFIG.BURN_GAME : 'pending');
+    setText('foot-net', s.chainId === CONFIG.CHAIN_ID ? 'verified on basescan' : 'wrong network');
+  });
+
+  function formatMS(secs) {
+    if (secs <= 0) return '00:00';
+    const m = Math.floor(secs / 60), s = secs % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  // ---------- 8. boot ----------
+  startPolling();
+  // Auto-reconnect previously chosen wallet (if user already approved)
+  const last = localStorage.getItem('burn:lastWallet');
+  if (last && detectWallet(last)) {
+    setTimeout(() => connectWallet(last).catch(() => {}), 200);
+  }
+</script>
+
+<!-- ============== TWEAKS PANEL ============== -->
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<div id="tweaks-root"></div>
+<script type="text/babel" data-presets="env,react">
+const { useEffect } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "timerSize": 204,
+  "showTexture": true,
+  "textureOpacity": 0.55,
+  "flames": true,
+  "flameIntensity": 0.95,
+  "primaryColor": "#0000FF",
+  "background": "#08080F",
+  "burnAmount": "500,000",
+  "leaderName": "burnpilled.base",
+  "potEth": "4.2184",
+  "showActivity": true
+}/*EDITMODE-END*/;
+
+function TweaksApp() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--blue', t.primaryColor);
+    document.documentElement.style.setProperty('--ink', t.background);
+    document.body.style.background = t.background;
+    const hb = document.querySelector('.hero-bg');
+    if (hb) {
+      hb.style.display = t.showTexture ? 'block' : 'none';
+      hb.style.opacity = t.textureOpacity;
+    }
+    const fl = document.querySelector('.hero-flames');
+    if (fl) {
+      fl.style.display = t.flames ? 'block' : 'none';
+      fl.style.opacity = t.flameIntensity;
+    }
+    const ir = document.querySelector('.hero-iris');
+    if (ir) {
+      ir.style.display = t.flames ? 'block' : 'none';
+      ir.style.opacity = t.flameIntensity;
+    }
+    const clk = document.querySelector('.timer-clock');
+    if (clk) clk.style.fontSize = t.timerSize + 'px';
+    const feed = document.querySelector('#feed');
+    if (feed) feed.style.display = t.showActivity ? 'block' : 'none';
+  }, [t]);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection label="Brand">
+        <TweakColor
+          label="Primary"
+          value={t.primaryColor}
+          onChange={(v) => setTweak('primaryColor', v)}
+          options={['#0000FF', '#1A1AFF', '#3366FF', '#FF3300']}
+        />
+        <TweakColor
+          label="Background"
+          value={t.background}
+          onChange={(v) => setTweak('background', v)}
+          options={['#000000', '#08080F', '#0a0a4a', '#F4F4EE']}
+        />
+      </TweakSection>
+
+      <TweakSection label="Hero">
+        <TweakSlider
+          label="Timer size"
+          value={t.timerSize}
+          min={120}
+          max={300}
+          step={4}
+          onChange={(v) => setTweak('timerSize', v)}
+          unit="px"
+        />
+        <TweakToggle
+          label="Holographic flames"
+          value={t.flames}
+          onChange={(v) => setTweak('flames', v)}
+        />
+        <TweakSlider
+          label="Flame intensity"
+          value={t.flameIntensity}
+          min={0}
+          max={1}
+          step={0.05}
+          onChange={(v) => setTweak('flameIntensity', v)}
+        />
+        <TweakToggle
+          label="Show base texture"
+          value={t.showTexture}
+          onChange={(v) => setTweak('showTexture', v)}
+        />
+        <TweakSlider
+          label="Texture opacity"
+          value={t.textureOpacity}
+          min={0}
+          max={1}
+          step={0.05}
+          onChange={(v) => setTweak('textureOpacity', v)}
+        />
+      </TweakSection>
+
+      <TweakSection label="Content">
+        <TweakText
+          label="Pot (ETH)"
+          value={t.potEth}
+          onChange={(v) => setTweak('potEth', v)}
+        />
+        <TweakText
+          label="Leader name"
+          value={t.leaderName}
+          onChange={(v) => setTweak('leaderName', v)}
+        />
+        <TweakToggle
+          label="Show live burns feed"
+          value={t.showActivity}
+          onChange={(v) => setTweak('showActivity', v)}
+        />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('tweaks-root'));
+root.render(<TweaksApp />);
+</script>
+
+</body>
+</html>
